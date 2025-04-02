@@ -41,8 +41,9 @@ set(CAPSTONE_ARCHITECTURE_DEFAULT OFF CACHE BOOL "disable capstone defaults" FOR
 set(CAPSTONE_ARM64_SUPPORT ON CACHE BOOL "enable capstone ARM64 support" FORCE)
 set(CAPSTONE_ARM_SUPPORT ON CACHE BOOL "enable capstone ARM support" FORCE)
 set(CAPSTONE_BUILD_TESTS OFF CACHE BOOL "disable capstone tests" FORCE)
+unset(PROJECT_VERSION) # capstone tries to parse the project version witch fails if the format is not major.minor.patch
 add_subdirectory(${CAPSTONE_HOME} capstone EXCLUDE_FROM_ALL)
-set_property(TARGET capstone-static PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET capstone PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 set(OCX_BUILD_TESTS OFF CACHE BOOL "disable ocx tests" FORCE)
 
@@ -85,7 +86,7 @@ else()
     target_compile_options(ocx-qemu-arm PRIVATE -Werror -Wall -Wextra)
 endif()
 
-target_link_libraries(ocx-qemu-arm ${UNICORN_LIB} capstone-static)
+target_link_libraries(ocx-qemu-arm ${UNICORN_LIB} capstone)
 
 install(TARGETS ocx-qemu-arm DESTINATION lib)
 
