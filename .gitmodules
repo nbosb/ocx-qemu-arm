@@ -1,6 +1,6 @@
 [submodule "ocx"]
 	path = ocx
-	url = https://github.com/snps-virtualprototyping/ocx.git 
+	url = https://github.com/nbosb/ocx.git
 [submodule "capstone"]
 	path = capstone
 	url = https://github.com/aquynh/capstone.git
