@@ -56,22 +56,33 @@ set(src "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(sources "${src}/armcore.cpp" "${src}/modeldb.cpp")
 
 add_library(ocx-qemu-arm MODULE ${sources})
+add_library(unicorn STATIC IMPORTED GLOBAL)
 
 if (MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    set(UNICORN_LIB ${UNICORN_HOME}/prebuilt/libunicorn.a
-                    ${UNICORN_HOME}/prebuilt/libgcc.a
-                    ${UNICORN_HOME}/prebuilt/libmingw32.a
-                    ${UNICORN_HOME}/prebuilt/libmingwex.a)
+    set_target_properties(unicorn PROPERTIES
+        IMPORTED_LOCATION ${UNICORN_HOME}/prebuilt/libunicorn.a
+        INTERFACE_LINK_LIBRARIES
+            ${UNICORN_HOME}/prebuilt/libgcc.a
+            ${UNICORN_HOME}/prebuilt/libmingw32.a
+            ${UNICORN_HOME}/prebuilt/libmingwex.a
+        INTERFACE_INCLUDE_DIRECTORIES
+            ${UNICORN_HOME}/include
+    )
+    target_compile_definitions(ocx-qemu-arm PUBLIC _CRT_SECURE_NO_WARNINGS)
 else()
     ExternalProject_Add(unicorn-build
-                        SOURCE_DIR "${UNICORN_HOME}"
-                        BUILD_IN_SOURCE 1
-                        CONFIGURE_COMMAND ""
-                        BUILD_COMMAND make UNICORN_STATIC=yes UNICORN_DYNAMIC=no UNICORN_DEBUG=${UNICORN_DEBUG}
-                        INSTALL_COMMAND "")
-    add_dependencies(ocx-qemu-arm unicorn-build)
-    set(UNICORN_LIB ${UNICORN_HOME}/libunicorn.a)
+        SOURCE_DIR "${UNICORN_HOME}"
+        BUILD_IN_SOURCE 1
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND make UNICORN_STATIC=yes UNICORN_DYNAMIC=no UNICORN_DEBUG=${UNICORN_DEBUG}
+        INSTALL_COMMAND ""
+        BUILD_BYPRODUCTS "<SOURCE_DIR>/libunicorn.a"
+    )
+    add_dependencies(unicorn unicorn-build)
+    set_target_properties(unicorn PROPERTIES
+        IMPORTED_LOCATION ${UNICORN_HOME}/libunicorn.a
+        INTERFACE_INCLUDE_DIRECTORIES ${UNICORN_HOME}/include
+    )
 endif()
 
 add_dependencies( ocx-qemu-arm ocx-test-runner ocx-dummy-core)
@@ -86,7 +97,7 @@ else()
     target_compile_options(ocx-qemu-arm PRIVATE -Werror -Wall -Wextra)
 endif()
 
-target_link_libraries(ocx-qemu-arm ${UNICORN_LIB} capstone_static)
+target_link_libraries(ocx-qemu-arm unicorn capstone_static)
 
 install(TARGETS ocx-qemu-arm DESTINATION lib)
 
